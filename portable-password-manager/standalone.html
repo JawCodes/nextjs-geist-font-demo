@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Password Manager</title>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    <script>
+        // Simple standalone password manager
+        const { useState, useEffect } = React;
+        
+        function PasswordManager() {
+            const [isLoggedIn, setIsLoggedIn] = useState(false);
+            const [email, setEmail] = useState('');
+            const [password, setPassword] = useState('');
+            const [passwords, setPasswords] = useState([]);
+            const [newSite, setNewSite] = useState('');
+            const [newUser, setNewUser] = useState('');
+            const [newPass, setNewPass] = useState('');
+            
+            const handleLogin = () => {
+                if (email && password.length >= 8) {
+                    setIsLoggedIn(true);
+                    const stored = localStorage.getItem(`passwords_${email}`);
+                    if (stored) setPasswords(JSON.parse(stored));
+                }
+            };
+            
+            const addPassword = () => {
+                if (newSite && newUser && newPass) {
+                    const newEntry = {
+                        id: Date.now(),
+                        site: newSite,
+                        username: newUser,
+                        password: newPass
+                    };
+                    const updated = [...passwords, newEntry];
+                    setPasswords(updated);
+                    localStorage.setItem(`passwords_${email}`, JSON.stringify(updated));
+                    setNewSite(''); setNewUser(''); setNewPass('');
+                }
+            };
+            
+            const deletePassword = (id) => {
+                const updated = passwords.filter(p => p.id !== id);
+                setPasswords(updated);
+                localStorage.setItem(`passwords_${email}`, JSON.stringify(updated));
+            };
+            
+            if (!isLoggedIn) {
+                return React.createElement('div', {
+                    className: 'min-h-screen flex items-center justify-center bg-gray-50'
+                }, React.createElement('div', {
+                    className: 'bg-white p-8 rounded-lg shadow-md w-96'
+                }, [
+                    React.createElement('h1', {
+                        key: 'title',
+                        className: 'text-2xl font-bold mb-6 text-center'
+                    }, 'Secure Password Manager'),
+                    React.createElement('input', {
+                        key: 'email',
+                        type: 'email',
+                        placeholder: 'Email',
+                        value: email,
+                        onChange: (e) => setEmail(e.target.value),
+                        className: 'w-full p-3 border rounded mb-4'
+                    }),
+                    React.createElement('input', {
+                        key: 'password',
+                        type: 'password',
+                        placeholder: 'Master Password',
+                        value: password,
+                        onChange: (e) => setPassword(e.target.value),
+                        className: 'w-full p-3 border rounded mb-4'
+                    }),
+                    React.createElement('button', {
+                        key: 'login',
+                        onClick: handleLogin,
+                        className: 'w-full bg-blue-600 text-white p-3 rounded hover:bg-blue-700'
+                    }, 'Login')
+                ]));
+            }
+            
+            return React.createElement('div', {
+                className: 'container mx-auto p-4'
+            }, [
+                React.createElement('div', {
+                    key: 'header',
+                    className: 'flex justify-between items-center mb-6'
+                }, [
+                    React.createElement('h1', {
+                        key: 'title',
+                        className: 'text-2xl font-bold'
+                    }, 'Password Manager'),
+                    React.createElement('button', {
+                        key: 'logout',
+                        onClick: () => setIsLoggedIn(false),
+                        className: 'bg-red-600 text-white px-4 py-2 rounded'
+                    }, 'Logout')
+                ]),
+                React.createElement('div', {
+                    key: 'form',
+                    className: 'bg-white p-6 rounded-lg shadow mb-6'
+                }, [
+                    React.createElement('h2', {
+                        key: 'form-title',
+                        className: 'text-lg font-bold mb-4'
+                    }, 'Add New Password'),
+                    React.createElement('input', {
+                        key: 'site',
+                        placeholder: 'Website',
+                        value: newSite,
+                        onChange: (e) => setNewSite(e.target.value),
+                        className: 'w-full p-2 border rounded mb-2'
+                    }),
+                    React.createElement('input', {
+                        key: 'user',
+                        placeholder: 'Username',
+                        value: newUser,
+                        onChange: (e) => setNewUser(e.target.value),
+                        className: 'w-full p-2 border rounded mb-2'
+                    }),
+                    React.createElement('input', {
+                        key: 'pass',
+                        placeholder: 'Password',
+                        value: newPass,
+                        onChange: (e) => setNewPass(e.target.value),
+                        className: 'w-full p-2 border rounded mb-4'
+                    }),
+                    React.createElement('button', {
+                        key: 'add',
+                        onClick: addPassword,
+                        className: 'bg-green-600 text-white px-4 py-2 rounded'
+                    }, 'Add Password')
+                ]),
+                React.createElement('div', {
+                    key: 'list',
+                    className: 'bg-white rounded-lg shadow'
+                }, passwords.map(p => React.createElement('div', {
+                    key: p.id,
+                    className: 'p-4 border-b flex justify-between items-center'
+                }, [
+                    React.createElement('div', { key: 'info' }, [
+                        React.createElement('div', {
+                            key: 'site',
+                            className: 'font-bold'
+                        }, p.site),
+                        React.createElement('div', {
+                            key: 'user',
+                            className: 'text-gray-600'
+                        }, p.username),
+                        React.createElement('div', {
+                            key: 'pass',
+                            className: 'text-sm'
+                        }, '••••••••')
+                    ]),
+                    React.createElement('button', {
+                        key: 'delete',
+                        onClick: () => deletePassword(p.id),
+                        className: 'bg-red-600 text-white px-3 py-1 rounded text-sm'
+                    }, 'Delete')
+                ])))
+            ]);
+        }
+        
+        ReactDOM.render(React.createElement(PasswordManager), document.getElementById('root'));
+    </script>
+</body>
+</html>
